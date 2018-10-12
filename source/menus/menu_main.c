@@ -1,4 +1,4 @@
-#include <switch.h>
+#include <whb/proc.h>
 #include <math.h>
 
 #include "common.h"
@@ -11,6 +11,7 @@
 #include "status_bar.h"
 #include "textures.h"
 #include "touch_helper.h"
+#include "input_helper.h"
 #include "utils.h"
 
 #define MENUBAR_X_BOUNDARY  0
@@ -25,7 +26,7 @@ void AnimateMenuBar(float delta_time)
 		menubar_x = MENUBAR_X_BOUNDARY;
 }
 
-static void Menu_ControlMenuBar(u64 input, TouchInfo touchInfo)
+static void Menu_ControlMenuBar(uint32_t input, TouchInfo touchInfo)
 {
 	if (input & KEY_A)
 		MENU_DEFAULT_STATE = MENU_STATE_SETTINGS;
@@ -47,11 +48,10 @@ static void Menu_DisplayMenuBar(void)
 	SDL_DrawRect(RENDERER, menubar_x, 0, 400, 720, config_dark_theme? BLACK_BG : WHITE);
 	SDL_DrawRect(RENDERER, menubar_x + 400, 0, 1, 720, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT);
 	SDL_DrawImage(RENDERER, bg_header, menubar_x, 0);
-	SDL_DrawText(RENDERER, Roboto_large, menubar_x + 15, 164, WHITE, "NX Shell");
+	SDL_DrawText(RENDERER, Roboto_large, menubar_x + 15, 164, WHITE, "WiiU Shell");
 	SDL_DrawImage(RENDERER, config_dark_theme? icon_sd_dark : icon_sd, menubar_x + 20, 254);
 	SDL_DrawText(RENDERER, Roboto, menubar_x + 100, 254, config_dark_theme? WHITE : BLACK, "External storage");
 	SDL_DrawText(RENDERER, Roboto_small, menubar_x + 100, 284, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "sdmc");
-	int settings_width = 0, settings_height = 0;
 	SDL_DrawRect(RENDERER, menubar_x + 10, 630, 80, 80, config_dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
 	SDL_DrawImage(RENDERER, config_dark_theme? icon_settings_dark : icon_settings, menubar_x + 20, 640);
 }
@@ -87,7 +87,7 @@ static void Menu_HandleMultiSelect(void)
 	Utils_SetMin(&multi_select_index, 50, 0);
 }
 
-static void Menu_ControlHome(u64 input, TouchInfo touchInfo)
+static void Menu_ControlHome(uint32_t input, TouchInfo touchInfo)
 {
 	if (input & KEY_PLUS)
 		longjmp(exitJmp, 1);
@@ -110,12 +110,12 @@ static void Menu_ControlHome(u64 input, TouchInfo touchInfo)
 		else if (input & KEY_DDOWN)
 			position++;
 
-		if ((hidKeysHeld(CONTROLLER_P1_AUTO) & KEY_RSTICK_UP) || (hidKeysHeld(CONTROLLER_P1_AUTO) & KEY_LSTICK_UP))
+		if ((Input_KeysHeld() & KEY_RSTICK_UP) || (Input_KeysHeld() & KEY_LSTICK_UP))
 		{
 			wait(5);
 			position--;
 		}
-		else if ((hidKeysHeld(CONTROLLER_P1_AUTO) & KEY_RSTICK_DOWN) || (hidKeysHeld(CONTROLLER_P1_AUTO) & KEY_LSTICK_DOWN))
+		else if ((Input_KeysHeld() & KEY_RSTICK_DOWN) || (Input_KeysHeld() & KEY_LSTICK_DOWN))
 		{
 			wait(5);
 			position++;
@@ -218,9 +218,9 @@ void Menu_Main(void)
 	Dirbrowse_PopulateFiles(false);
 	memset(multi_select, 0, sizeof(multi_select)); // Reset all multi selected items
 
-	u64 current_time = 0, last_time = 0;
+	uint64_t current_time = 0, last_time = 0;
 
-	while(appletMainLoop())
+	while(WHBProcIsRunning())
 	{
 		last_time = current_time;
     	current_time = SDL_GetPerformanceCounter();
@@ -234,9 +234,9 @@ void Menu_Main(void)
 		StatusBar_DisplayTime();
 		Dirbrowse_DisplayFiles();
 
-		hidScanInput();
+		Input_Update();
 		Touch_Process(&touchInfo);
-		u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
+		uint32_t kDown = Input_KeysDown();
 	
 		if (MENU_DEFAULT_STATE == MENU_STATE_HOME)
 			Menu_ControlHome(kDown, touchInfo);

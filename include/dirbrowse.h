@@ -1,7 +1,7 @@
-#ifndef NX_SHELL_DIRBROWSE_H
-#define NX_SHELL_DIRBROWSE_H
+#ifndef WIIU_SHELL_DIRBROWSE_H
+#define WIIU_SHELL_DIRBROWSE_H
 
-#include <switch.h>
+#include <stdbool.h>
 
 typedef struct File
 {
@@ -9,9 +9,9 @@ typedef struct File
 	int isDir;          // Folder flag
 	int isReadOnly;     // Read-only flag
 	int isHidden;       // Hidden file flag
-	u8 name[256];       // File name
+	char name[256];       // File name
 	char ext[4];        // File extension
-	u64 size;           // File size
+	uint32_t size;           // File size
 } File;
 
 extern File *files;

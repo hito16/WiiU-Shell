@@ -1,12 +1,13 @@
+#include <whb/proc.h>
 #include <dirent.h>
-
-#include <switch.h>
+#include <stdbool.h>
 
 #include "common.h"
 #include "fs.h"
 #include "menu_gallery.h"
 #include "SDL_helper.h"
 #include "touch_helper.h"
+#include "input_helper.h"
 #include "utils.h"
 
 static char album[1024][512];
@@ -45,6 +46,7 @@ static int Gallery_GetCurrentIndex(char *path)
 		if (!strcmp(album[i], path))
 			return i;
 	}
+	return 0;
 }
 
 static void Gallery_HandleNext(bool forward)
@@ -81,10 +83,10 @@ void Gallery_DisplayImage(char *path)
 	TouchInfo touchInfo;
 	Touch_Init(&touchInfo);
 
-	u64 current_time = 0, last_time = 0;
+	uint64_t current_time = 0, last_time = 0;
 	float zoom_factor = 1.0f;
 
-	while(appletMainLoop())
+	while(WHBProcIsRunning())
 	{
 		SDL_ClearScreen(RENDERER, SDL_MakeColour(33, 39, 43, 255));
 		SDL_RenderClear(RENDERER);
@@ -105,10 +107,10 @@ void Gallery_DisplayImage(char *path)
 			(float)((720.0f - (height * zoom_factor)) / 2.0f), (float)width, (float)height, zoom_factor);
 		}
 
-		hidScanInput();
+		Input_Update();
 		Touch_Process(&touchInfo);
-		u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
-		u64 kHeld = hidKeysHeld(CONTROLLER_P1_AUTO);
+		uint32_t kDown = Input_KeysDown();
+		uint32_t kHeld = Input_KeysHeld();
 
 		if ((kDown & KEY_DLEFT) || (kDown & KEY_L))
 		{

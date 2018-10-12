@@ -1,7 +1,7 @@
-#ifndef NX_SHELL_TOUCH_HELPER_H
-#define NX_SHELL_TOUCH_HELPER_H
+#ifndef WIIU_SHELL_TOUCH_HELPER_H
+#define WIIU_SHELL_TOUCH_HELPER_H
 
-#include <switch.h>
+#include "input_helper.h"
 #include <time.h>
 
 #define tapped_inside(touchInfo, x1, y1, x2, y2) (touchInfo.firstTouch.px >= x1 && touchInfo.firstTouch.px <= x2 && touchInfo.firstTouch.py >= y1 && touchInfo.firstTouch.py <= y2)
@@ -25,10 +25,10 @@ typedef enum TapType
 typedef struct TouchInfo 
 {
     TouchState state;
-    touchPosition firstTouch;
-    touchPosition prevTouch;
+    TouchPosition firstTouch;
+    TouchPosition prevTouch;
     TapType tapType;
-    u64 touchStart;
+    time_t touchStart;
 } TouchInfo;
 
 void Touch_Init(TouchInfo * touchInfo);

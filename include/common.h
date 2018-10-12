@@ -1,5 +1,5 @@
-#ifndef NX_SHELL_COMMON_H
-#define NX_SHELL_COMMON_H
+#ifndef WIIU_SHELL_COMMON_H
+#define WIIU_SHELL_COMMON_H
 
 #include <setjmp.h>
 #include <SDL2/SDL.h>
@@ -8,7 +8,7 @@
 #include <SDL2/SDL_mixer.h>
 #include <SDL_ttf.h>
 
-#define wait(msec) svcSleepThread(10000000 * (s64)msec)
+#define wait(msec) SDL_Delay(msec)
 
 extern jmp_buf exitJmp;
 
@@ -17,7 +17,7 @@ extern SDL_Surface *WINDOW_SURFACE;
 extern SDL_Renderer *RENDERER;
 extern TTF_Font *Roboto_large, *Roboto, *Roboto_small, *Roboto_OSK;
 
-#define ROOT_PATH "/"
+#define ROOT_PATH "/vol/external01/"
 #define START_PATH ROOT_PATH
 #define MAX_FILES 2048
 #define FILES_PER_PAGE 8

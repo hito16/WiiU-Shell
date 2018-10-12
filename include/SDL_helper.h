@@ -1,5 +1,5 @@
-#ifndef NX_SHELL_SDL_HELPER_H
-#define NX_SHELL_SDL_HELPER_H
+#ifndef WIIU_SHELL_SDL_HELPER_H
+#define WIIU_SHELL_SDL_HELPER_H
 
 static inline SDL_Color SDL_MakeColour(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {

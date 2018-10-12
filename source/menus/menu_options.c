@@ -1,8 +1,7 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
-
-#include <switch.h>
+#include <stdbool.h>
 
 #include "common.h"
 #include "config.h"
@@ -47,7 +46,7 @@ void FileOptions_ResetClipboard(void)
 	memset(multi_select_paths, 0, sizeof(multi_select_paths));
 }
 
-static Result FileOptions_CreateFolder(void)
+static int FileOptions_CreateFolder(void)
 {
 	OSK_Display("Create Folder", "");
 
@@ -59,8 +58,8 @@ static Result FileOptions_CreateFolder(void)
 	strcat(path, osk_buffer);
 	osk_buffer[0] = '\0';
 
-	Result ret = 0;
-	if (R_FAILED(ret = FS_RecursiveMakeDir(path)))
+	int ret = 0;
+	if ((ret = FS_RecursiveMakeDir(path)) != 0)
 		return ret;
 	
 	Dirbrowse_PopulateFiles(true);
@@ -68,9 +67,9 @@ static Result FileOptions_CreateFolder(void)
 	return 0;
 }
 
-static Result FileOptions_Rename(void)
+static int FileOptions_Rename(void)
 {
-	Result ret = 0;
+	int ret = 0;
 	File *file = Dirbrowse_GetFileIndex(position);
 
 	if (file == NULL)
@@ -93,7 +92,7 @@ static Result FileOptions_Rename(void)
 	strcat(newPath, osk_buffer);
 	osk_buffer[0] = '\0';
 
-	if (R_FAILED(ret = rename(oldPath, newPath)))
+	if ((ret = rename(oldPath, newPath)) != 0)
 		return ret;
 	
 	Dirbrowse_PopulateFiles(true);
@@ -237,13 +236,13 @@ static int FileOptions_CopyFile(char *src, char *dst, bool displayAnim)
 	int chunksize = (512 * 1024); // Chunk size
 	char *buffer = (char *)malloc(chunksize); // Reading buffer
 
-	u64 totalwrite = 0; // Accumulated writing
-	u64 totalread = 0; // Accumulated reading
+	uint32_t totalwrite = 0; // Accumulated writing
+	uint32_t totalread = 0; // Accumulated reading
 
-	int result = 0; // Result
+	int result = 0; // int
 
 	int in = open(src, O_RDONLY, 0777); // Open file for reading
-	u64 size = FS_GetFileSize(src);
+	uint32_t size = FS_GetFileSize(src);
 
 	// Opened file for reading
 	if (in >= 0)
@@ -255,7 +254,7 @@ static int FileOptions_CopyFile(char *src, char *dst, bool displayAnim)
 
 		if (out >= 0) // Opened file for writing
 		{
-			u64 b_read = 0; // Read byte count
+			uint32_t b_read = 0; // Read byte count
 
 			// Copy loop (512KB at a time)
 			while((b_read = read(in, buffer, chunksize)) > 0)
@@ -288,7 +287,7 @@ static int FileOptions_CopyFile(char *src, char *dst, bool displayAnim)
 }
 
 // Recursively copy file from src to dst
-static Result FileOptions_CopyDir(char *src, char *dst)
+static int FileOptions_CopyDir(char *src, char *dst)
 {
 	DIR *directory = opendir(src);
 
@@ -363,7 +362,7 @@ static void FileOptions_Copy(int flag)
 }
 
 // Paste file or folder
-static Result FileOptions_Paste(void)
+static int FileOptions_Paste(void)
 {
 	if (copymode == NOTHING_TO_COPY) // No copy source
 		return -1;
@@ -393,7 +392,7 @@ static Result FileOptions_Paste(void)
 	strcpy(copytarget, cwd);
 	strcpy(copytarget + strlen(copytarget), filename);
 
-	Result ret = -3; // Return result
+	int ret = -3; // Return result
 
 	// Recursive folder copy
 	if ((copymode & COPY_FOLDER_RECURSIVE) == COPY_FOLDER_RECURSIVE)
@@ -407,7 +406,7 @@ static Result FileOptions_Paste(void)
 
 		ret = FileOptions_CopyDir(copysource, copytarget); // Copy folder recursively
 
-		if ((R_SUCCEEDED(ret)) && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
+		if (((ret) == 0) && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
 		{
 			// Needs to add a forward "/"
 			if (!(strcmp(&(copysource[(strlen(copysource)-1)]), "/") == 0))
@@ -422,12 +421,12 @@ static Result FileOptions_Paste(void)
 	{
 		ret = FileOptions_CopyFile(copysource, copytarget, true); // Copy file
 		
-		if ((R_SUCCEEDED(ret)) && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
+		if (((ret) == 0) && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
 			remove(copysource); // Delete file
 	}
 
 	// Paste success
-	if (R_SUCCEEDED(ret))
+	if ((ret) == 0)
 	{
 		memset(copysource, 0, sizeof(copysource)); // Erase cache data
 		copymode = NOTHING_TO_COPY;
@@ -469,7 +468,7 @@ static void HandleDelete(void)
 	MENU_DEFAULT_STATE = MENU_STATE_HOME;
 }
 
-void Menu_ControlDeleteDialog(u64 input, TouchInfo touchInfo)
+void Menu_ControlDeleteDialog(uint32_t input, TouchInfo touchInfo)
 {
 	if ((input & KEY_RIGHT) || (input & KEY_LSTICK_RIGHT) || (input & KEY_RSTICK_RIGHT))
 		delete_dialog_selection++;
@@ -541,7 +540,7 @@ void Menu_DisplayDeleteDialog(void)
 	SDL_DrawText(RENDERER, Roboto, 910 - (delete_cancel_width), ((720 - (delete_height)) / 2) + 245, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "NO");
 }
 
-void Menu_ControlProperties(u64 input, TouchInfo touchInfo)
+void Menu_ControlProperties(uint32_t input, TouchInfo touchInfo)
 {
 	if ((input & KEY_A) || (input & KEY_B))
 		MENU_DEFAULT_STATE = MENU_STATE_OPTIONS;
@@ -569,7 +568,7 @@ void Menu_DisplayProperties(void)
 	SDL_DrawText(RENDERER, Roboto, 370, 133, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Actions");
 
 	char utils_size[16];
-	u64 size = FS_GetFileSize(path);
+	uint32_t size = FS_GetFileSize(path);
 	Utils_GetSizeString(utils_size, size);
 
 	SDL_DrawTextf(RENDERER, Roboto, 390, 183, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Name: %s", file->name);
@@ -676,7 +675,7 @@ static void HandleCut()
 	}
 }
 
-void Menu_ControlOptions(u64 input, TouchInfo touchInfo)
+void Menu_ControlOptions(uint32_t input, TouchInfo touchInfo)
 {
 	if ((input & KEY_RIGHT) || (input & KEY_LSTICK_RIGHT) || (input & KEY_RSTICK_RIGHT))
 		row++;

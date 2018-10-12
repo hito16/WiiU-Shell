@@ -1,5 +1,5 @@
-#ifndef NX_SHELL_TEXTURES_H
-#define NX_SHELL_TEXTURES_H
+#ifndef WIIU_SHELL_TEXTURES_H
+#define WIIU_SHELL_TEXTURES_H
 
 
 SDL_Texture *icon_app, *icon_archive, *icon_audio, *icon_dir, *icon_file, *icon_image, *icon_text, *icon_dir_dark, \

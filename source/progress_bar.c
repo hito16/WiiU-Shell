@@ -1,12 +1,10 @@
-#include <switch.h>
-
 #include "common.h"
 #include "config.h"
 #include "progress_bar.h"
 #include "SDL_helper.h"
 #include "textures.h"
 
-void ProgressBar_DisplayProgress(char *msg, char *src, u32 offset, u32 size)
+void ProgressBar_DisplayProgress(char *msg, char *src, uint32_t offset, uint32_t size)
 {
 	int text_width = 0;
 	TTF_SizeText(Roboto, src, &text_width, NULL);

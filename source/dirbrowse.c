@@ -1,5 +1,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
+#include <stdbool.h>
+#include <string.h>
 
 #include "archive.h"
 #include "common.h"
@@ -8,7 +10,6 @@
 #include "fs.h"
 #include "menu_gallery.h"
 #include "menu_music.h"
-#include "menu_book_reader.h"
 #include "SDL_helper.h"
 #include "textures.h"
 #include "utils.h"
@@ -102,8 +103,8 @@ static int cmpstringp(const struct dirent **dent1, const struct dirent **dent2)
 	if (ret)
 		return 0;
 
-	u64 sizeA = FS_GetFileSize(path1);
-	u64 sizeB = FS_GetFileSize(path2);
+	uint32_t sizeA = FS_GetFileSize(path1);
+	uint32_t sizeB = FS_GetFileSize(path2);
 
 	switch(config_sort_by)
 	{
@@ -135,6 +136,7 @@ static int cmpstringp(const struct dirent **dent1, const struct dirent **dent2)
 				return isDir[1] - isDir[0]; // put directories first
 			break;
 	}
+	return 0;
 }
 
 void Dirbrowse_PopulateFiles(bool clear)
@@ -181,8 +183,6 @@ void Dirbrowse_PopulateFiles(bool clear)
 				// Ignore ".." in Root Directory
 				if (strcmp(cwd, ROOT_PATH) == 0 && strncmp(entries[i]->d_name, "..", 2) == 0) // Ignore ".." in Root Directory
 					continue;
-
-				char isDir[2];
 
 				// Allocate Memory
 				File *item = (File *)malloc(sizeof(File));
@@ -292,9 +292,6 @@ void Dirbrowse_DisplayFiles(void)
 			else if ((strncasecmp(FS_GetFileExt(file->name), "txt", 3) == 0) || (strncasecmp(FS_GetFileExt(file->name), "lua", 3) == 0) 
             		|| (strncasecmp(FS_GetFileExt(file->name), "cfg", 3) == 0))
 				SDL_DrawImageScale(RENDERER, icon_text, 80, 141 + (73 * printed), 72, 72);
-			else if ((strncasecmp(FS_GetFileExt(file->name), "pdf", 3) == 0) || (strncasecmp(FS_GetFileExt(file->name), "cbz", 3) == 0)
-					|| (strncasecmp(FS_GetFileExt(file->name), "fb2", 3) == 0) || (strncasecmp(FS_GetFileExt(file->name), "epub", 4) == 0))
-				SDL_DrawImageScale(RENDERER, icon_doc, 80, 141 + (73 * printed), 72, 72);
 			else
 				SDL_DrawImageScale(RENDERER, icon_file, 80, 141 + (73 * printed), 72, 72);
 
@@ -330,7 +327,7 @@ static void Dirbrowse_SaveLastDirectory(void)
 	char *buf = (char *)malloc(512);
 	strcpy(buf, cwd);
 
-	FILE *write = fopen("/switch/NX-Shell/lastdir.txt", "w");
+	FILE *write = fopen("wiiu/WiiU-Shell/lastdir.txt", "w");
 	fprintf(write, "%s", buf);
 	fclose(write);
 	free(buf);
@@ -365,7 +362,7 @@ void Dirbrowse_OpenFile(void)
 	if (file->isDir)
 	{
 		// Attempt to navigate to target
-		if (R_SUCCEEDED(Dirbrowse_Navigate(false)))
+		if (Dirbrowse_Navigate(false) == 0)
 		{
 			Dirbrowse_SaveLastDirectory();
 			Dirbrowse_PopulateFiles(true);
@@ -384,9 +381,6 @@ void Dirbrowse_OpenFile(void)
 			|| (strncasecmp(FS_GetFileExt(file->name), "flac", 4) == 0) || (strncasecmp(FS_GetFileExt(file->name), "midi", 4) == 0)
 			|| (strncasecmp(FS_GetFileExt(file->name), "mid", 3) == 0))
 		Menu_PlayMusic(path);
-	else if ((strncasecmp(FS_GetFileExt(file->name), "pdf", 3) == 0) || (strncasecmp(FS_GetFileExt(file->name), "cbz", 3) == 0)
-			|| (strncasecmp(FS_GetFileExt(file->name), "fb2", 3) == 0) || (strncasecmp(FS_GetFileExt(file->name), "epub", 4) == 0))
-		Menu_OpenBook(path);
 
 	/*else if (strncasecmp(file->ext, "txt", 3) == 0)
 		TextViewer_DisplayText(path);*/

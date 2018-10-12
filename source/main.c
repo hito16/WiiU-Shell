@@ -1,15 +1,28 @@
 #include <stdio.h>
-#include <switch.h>
-
-#ifdef DEBUG
-#include <sys/socket.h>
-#endif
+#include <romfs-wiiu.h>
 
 #include "common.h"
 #include "config.h"
 #include "fs.h"
 #include "menu_main.h"
 #include "textures.h"
+
+#ifdef DEBUG
+
+#include <unistd.h>
+#include <whb/log.h>
+#include <whb/log_udp.h>
+#include <sys/iosupport.h>
+
+static devoptab_t dotab_stdout;
+static ssize_t wiiu_log_write (struct _reent *r, void *fd, const char *ptr, size_t len) {
+	WHBLogPrintf("%*.*s", len, len, ptr);
+	return len;
+}
+
+#endif
+
+
 
 static void Term_Services(void)
 {
@@ -31,11 +44,9 @@ static void Term_Services(void)
 	SDL_DestroyWindow(WINDOW);
 
 	#ifdef DEBUG
-	socketExit();
+	WHBLogUdpDeinit();
 	#endif
 
-	psmExit();
-	timeExit();
 	SDL_Quit();
 	romfsExit();
 }
@@ -44,12 +55,14 @@ static void Init_Services(void)
 {
 	romfsInit();
 	SDL_Init(SDL_INIT_EVERYTHING);
-	timeInitialize();
-	psmInitialize();
 
 	#ifdef DEBUG
-	socketInitializeDefault();
-	nxlinkStdio();
+	WHBLogUdpInit();
+	memset(&dotab_stdout, 0, sizeof(devoptab_t));
+	dotab_stdout.name = "stdout_udp";
+	dotab_stdout.write_r = &wiiu_log_write;
+	devoptab_list[STD_OUT] = &dotab_stdout;
+	devoptab_list[STD_ERR] = &dotab_stdout;
 	#endif
 
 	SDL_CreateWindowAndRenderer(1280, 720, 0, &WINDOW, &RENDERER);
@@ -75,13 +88,13 @@ static void Init_Services(void)
 
 	Textures_Load();
 
-	FS_RecursiveMakeDir("/switch/NX-Shell/");
+	FS_RecursiveMakeDir("wiiu/WiiU-Shell/");
 
-	if (FS_FileExists("/switch/NX-Shell/lastdir.txt"))
+	if (FS_FileExists("wiiu/WiiU-Shell/lastdir.txt"))
 	{
 		char *buf = (char *)malloc(256);
 		
-		FILE *read = fopen("/switch/NX-Shell/lastdir.txt", "r");
+		FILE *read = fopen("wiiu/WiiU-Shell/lastdir.txt", "r");
 		fscanf(read, "%s", buf);
 		fclose(read);
 		
@@ -97,7 +110,7 @@ static void Init_Services(void)
 		char *buf = (char *)malloc(256);
 		strcpy(buf, START_PATH);
 			
-		FILE *write = fopen("/switch/NX-Shell/lastdir.txt", "w");
+		FILE *write = fopen("wiiu/WiiU-Shell/lastdir.txt", "w");
 		fprintf(write, "%s", buf);
 		fclose(write);
 		

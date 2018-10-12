@@ -1,5 +1,5 @@
-#ifndef NX_SHELL_OSK_H
-#define NX_SHELL_OSK_H
+#ifndef WIIU_SHELL_OSK_H
+#define WIIU_SHELL_OSK_H
 
 #define MAX_Y 4
 #define MAX_X 9

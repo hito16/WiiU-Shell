@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <switch.h>
+#include <stdbool.h>
 
 #include "fs.h"
 
@@ -84,7 +84,7 @@ char *FS_GetFileModifiedTime(const char *filename)
 	return ctime(&attr.st_mtime);
 }
 
-u64 FS_GetFileSize(const char *filename)
+uint32_t FS_GetFileSize(const char *filename)
 {
 	struct stat st;
 	stat(filename, &st);

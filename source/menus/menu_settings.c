@@ -1,4 +1,6 @@
+#include <whb/proc.h>
 #include <math.h>
+#include <stdbool.h>
 
 #include "common.h"
 #include "config.h"
@@ -55,7 +57,7 @@ static void Menu_DisplaySortSettings(void)
 	int radio_button_width = 0, radio_button_height = 0; // 1180
 	SDL_QueryTexture(icon_radio_dark_on, NULL, NULL, &radio_button_width, &radio_button_height);
 
-	while(appletMainLoop())
+	while(WHBProcIsRunning())
 	{
 		SDL_ClearScreen(RENDERER, config_dark_theme? BLACK_BG : WHITE);
 		SDL_RenderClear(RENDERER);
@@ -100,9 +102,9 @@ static void Menu_DisplaySortSettings(void)
 		
 		SDL_RenderPresent(RENDERER);
 
-		hidScanInput();
+		Input_Update();
 		Touch_Process(&touchInfo);
-		u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
+		uint32_t kDown = Input_KeysDown();
 
 		if (kDown & KEY_B)
 			break;
@@ -139,7 +141,7 @@ static void Menu_DisplaySortSettings(void)
 	Dirbrowse_PopulateFiles(true);
 }
 
-static void Menu_ControlAboutDialog(u64 input)
+static void Menu_ControlAboutDialog(uint32_t input)
 {
 	if ((input & KEY_A) || (input & KEY_B))
 		displayAbout = false;
@@ -161,7 +163,7 @@ static void Menu_TouchAboutDialog(TouchInfo touchInfo)
 static void Menu_DisplayAboutDialog(void)
 {
 	int text1_width = 0, text2_width = 0, text3_width = 0, text4_width = 0, text5_width = 0;
-	TTF_SizeText(Roboto_small, "NX Shell vX.X.X", &text1_width, NULL);
+	TTF_SizeText(Roboto_small, "WiiU Shell vX.X.X", &text1_width, NULL);
 	TTF_SizeText(Roboto_small, "Author: Joel16", &text2_width, NULL);
 	TTF_SizeText(Roboto_small, "Graphics: Preetisketch and CyanogenMod/LineageOS contributors", &text3_width, NULL);
 	TTF_SizeText(Roboto_small, "Touch screen: StevenMattera", &text4_width, NULL);
@@ -173,7 +175,7 @@ static void Menu_DisplayAboutDialog(void)
 
 	SDL_DrawImage(RENDERER, config_dark_theme? dialog_dark : dialog, ((1280 - (dialog_width)) / 2), ((720 - (dialog_height)) / 2));
 	SDL_DrawText(RENDERER, Roboto, ((1280 - (dialog_width)) / 2) + 80, ((720 - (dialog_height)) / 2) + 45, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "About");
-	SDL_DrawTextf(RENDERER, Roboto_small, ((1280 - (text1_width)) / 2), ((720 - (dialog_height)) / 2) + 70, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "NX Shell v%d.%d.%d", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO);
+	SDL_DrawTextf(RENDERER, Roboto_small, ((1280 - (text1_width)) / 2), ((720 - (dialog_height)) / 2) + 70, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "WiiU Shell v%d.%d.%d", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO);
 	SDL_DrawText(RENDERER, Roboto_small, ((1280 - (text2_width)) / 2), ((720 - (dialog_height)) / 2) + 100, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Author: Joel16");
 	SDL_DrawText(RENDERER, Roboto_small, ((1280 - (text3_width)) / 2), ((720 - (dialog_height)) / 2) + 130, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Graphics: Preetisketch and CyanogenMod/LineageOS contributors");
 	SDL_DrawText(RENDERER, Roboto_small, ((1280 - (text4_width)) / 2), ((720 - (dialog_height)) / 2) + 160, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Touch screen: StevenMattera");
@@ -204,7 +206,7 @@ void Menu_DisplaySettings(void)
 
 	displayAbout = false;
 
-	while(appletMainLoop())
+	while(WHBProcIsRunning())
 	{
 		SDL_ClearScreen(RENDERER, config_dark_theme? BLACK_BG : WHITE);
 		SDL_RenderClear(RENDERER);
@@ -245,9 +247,9 @@ void Menu_DisplaySettings(void)
 
 		SDL_RenderPresent(RENDERER);
 
-		hidScanInput();
+		Input_Update();
 		Touch_Process(&touchInfo);
-		u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
+		uint32_t kDown = Input_KeysDown();
 
 		if (displayAbout)
 		{

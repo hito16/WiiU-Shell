@@ -1,19 +1,21 @@
 #include <time.h>
-#include <switch.h>
+#include <stdbool.h>
+#include <coreinit/time.h>
 
 #include "common.h"
 #include "SDL_helper.h"
 #include "status_bar.h"
 #include "textures.h"
+#include "input_helper.h"
 
 static char *Clock_GetCurrentTime(void)
 {
 	static char buffer[10];
 
-    time_t unixTime = time(NULL);
-	struct tm* timeStruct = gmtime((const time_t *)&unixTime);
-	int hours = (timeStruct->tm_hour);
-	int minutes = timeStruct->tm_min;
+	OSCalendarTime calTime;
+	OSTicksToCalendarTime(OSGetTime(), &calTime);
+	int hours = (calTime.tm_hour);
+	int minutes = calTime.tm_min;
 	
 	bool amOrPm = false;
 	
@@ -34,79 +36,55 @@ static char *Clock_GetCurrentTime(void)
 
 static void StatusBar_GetBatteryStatus(int x, int y)
 {
-	u32 percent = 0;
-	ChargerType state;
+	int percent = 50;
 	int width = 0;
 	char buf[5];
 
-	if (R_FAILED(psmGetChargerType(&state)))
-		state = 0;
-	
-	if (R_SUCCEEDED(psmGetBatteryChargePercentage(&percent)))
+	switch(Input_BatteryStatus())
 	{
-		if (percent < 20)
+		case 0:
+			SDL_DrawImage(RENDERER, battery_50_charging, x, 3);
+			percent = -1;
+			break;
+		case 1:
 			SDL_DrawImage(RENDERER, battery_low, x, 3);
-		else if ((percent >= 20) && (percent < 30))
-		{
-			if (state != 0)
-				SDL_DrawImage(RENDERER, battery_20_charging, x, 3);
-			else
-				SDL_DrawImage(RENDERER, battery_20, x, 3);
-		}
-		else if ((percent >= 30) && (percent < 50))
-		{
-			if (state != 0)
-				SDL_DrawImage(RENDERER, battery_50_charging, x, 3);
-			else
-				SDL_DrawImage(RENDERER, battery_50, x, 3);
-		}
-		else if ((percent >= 50) && (percent < 60))
-		{
-			if (state != 0)
-				SDL_DrawImage(RENDERER, battery_50_charging, x, 3);
-			else
-				SDL_DrawImage(RENDERER, battery_50, x, 3);
-		}
-		else if ((percent >= 60) && (percent < 80))
-		{
-			if (state != 0)
-				SDL_DrawImage(RENDERER, battery_60_charging, x, 3);
-			else
-				SDL_DrawImage(RENDERER, battery_60, x, 3);
-		}
-		else if ((percent >= 80) && (percent < 90))
-		{
-			if (state != 0)
-				SDL_DrawImage(RENDERER, battery_80_charging, x, 3);
-			else
-				SDL_DrawImage(RENDERER, battery_80, x, 3);
-		}
-		else if ((percent >= 90) && (percent < 100))
-		{
-			if (state != 0)
-				SDL_DrawImage(RENDERER, battery_90_charging, x, 3);
-			else
-				SDL_DrawImage(RENDERER, battery_90, x, 3);
-		}
-		else if (percent == 100)
-		{
-			if (state != 0)
-				SDL_DrawImage(RENDERER, battery_full_charging, x, 3);
-			else
-				SDL_DrawImage(RENDERER, battery_full, x, 3);
-		}
+			percent = 0;
+			break;
+		case 2:
+			SDL_DrawImage(RENDERER, battery_20, x, 3);
+			percent = 20;
+			break;
+		case 3:
+			SDL_DrawImage(RENDERER, battery_30, x, 3);
+			percent = 30;
+			break;
+		case 4:
+			SDL_DrawImage(RENDERER, battery_50, x, 3);
+			percent = 50;
+			break;
+		case 5:
+			SDL_DrawImage(RENDERER, battery_80, x, 3);
+			percent = 80;
+			break;
+		case 6:
+			SDL_DrawImage(RENDERER, battery_full, x, 3);
+			percent = 100;
+			break;
+		default:
+			SDL_DrawImage(RENDERER, battery_unknown, x, 3);
+			percent = -2;
+			break;
+	}
 
+	if (percent >= 0)
 		snprintf(buf, 5, "%d%%", percent);
-		TTF_SizeText(Roboto, buf, &width, NULL);
-		SDL_DrawText(RENDERER, Roboto, (x - width - 10), y, WHITE, buf);
-	}
-	else
-	{
-		snprintf(buf, 5, "%d%%", percent);
-		TTF_SizeText(Roboto, buf, &width, NULL);
-		SDL_DrawText(RENDERER, Roboto, (x - width - 10), y, WHITE, buf);
-		SDL_DrawImage(RENDERER, battery_unknown, x, 1);
-	}
+	else if (percent == -1)
+		snprintf(buf, 5, "CHRG");
+	else if (percent == -2)
+		snprintf(buf, 5, "UNKN");
+
+	TTF_SizeText(Roboto, buf, &width, NULL);
+	SDL_DrawText(RENDERER, Roboto, (x - width - 10), y, WHITE, buf);
 }
 
 void StatusBar_DisplayTime(void)

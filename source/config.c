@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <switch.h>
+#include <stdbool.h>
 
 #include "config.h"
 #include "fs.h"
@@ -17,7 +17,7 @@ int Config_Save(bool config_dark_theme, int config_sort_by)
 	char *buf = (char *)malloc(64);
 	snprintf(buf, 64, configFile, config_dark_theme, config_sort_by);
 
-	FILE *file = fopen("/switch/NX-Shell/config.cfg", "w");
+	FILE *file = fopen("wiiu/WiiU-Shell/config.cfg", "w");
 	fprintf(file, buf);
 	fclose(file);
 
@@ -27,17 +27,17 @@ int Config_Save(bool config_dark_theme, int config_sort_by)
 
 int Config_Load(void)
 {
-	if (!FS_FileExists("/switch/NX-Shell/config.cfg"))
+	if (!FS_FileExists("wiiu/WiiU-Shell/config.cfg"))
 	{
 		config_dark_theme = false;
 		config_sort_by = 0;
 		return Config_Save(config_dark_theme, config_sort_by);
 	}
 
-	u64 size = FS_GetFileSize("/switch/NX-Shell/config.cfg");
+	uint32_t size = FS_GetFileSize("wiiu/WiiU-Shell/config.cfg");
 	char *buf = (char *)malloc(size + 1);
 
-	FILE *file = fopen("/switch/NX-Shell/config.cfg", "r");
+	FILE *file = fopen("wiiu/WiiU-Shell/config.cfg", "r");
 	fread(buf, size, 1, file);
 	fclose(file);
 

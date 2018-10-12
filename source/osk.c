@@ -1,4 +1,6 @@
-#include <switch.h>
+#include <whb/proc.h>
+#include <stdbool.h>
+#include <string.h>
 
 #include "common.h"
 #include "config.h"
@@ -6,6 +8,7 @@
 #include "SDL_helper.h"
 #include "status_bar.h"
 #include "touch_helper.h"
+#include "input_helper.h"
 #include "textures.h"
 #include "utils.h"
 
@@ -111,7 +114,7 @@ void OSK_Display(char *title, char *msg)
 	int osk_pos_x = 0, osk_pos_y = 0, transp = 255;
 	bool osk_text_shift = false, osk_text_caps = false;
 
-	while(appletMainLoop())
+	while(WHBProcIsRunning())
 	{	
 		SDL_ClearScreen(RENDERER, config_dark_theme? BLACK_BG : WHITE);
 		SDL_DrawRect(RENDERER, 0, 0, 1280, 40, config_dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT);	// Status bar
@@ -166,10 +169,9 @@ void OSK_Display(char *title, char *msg)
 
 		SDL_RenderPresent(RENDERER);
 
-		hidScanInput();
+		Input_Update();
 		Touch_Process(&touchInfo);
-		u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
-		u64 kHeld = hidKeysHeld(CONTROLLER_P1_AUTO);
+		uint32_t kDown = Input_KeysDown();
 
 		if (kDown & KEY_LEFT)
 			osk_pos_x--;

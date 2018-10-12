@@ -1,7 +1,7 @@
-#ifndef NX_SHELL_CONFIG_H
-#define NX_SHELL_CONFIG_H
+#ifndef WIIU_SHELL_CONFIG_H
+#define WIIU_SHELL_CONFIG_H
 
-#include <switch.h>
+#include <stdbool.h>
 
 extern bool config_dark_theme;
 extern int config_sort_by;

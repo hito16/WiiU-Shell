@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "archive.h"
 #include "progress_bar.h"
@@ -9,9 +10,9 @@
 #include "unzip.h"
 #include "utils.h"
 
-Result unzExtractCurrentFile(unzFile *unzHandle, int *path)
+int unzExtractCurrentFile(unzFile *unzHandle, int *path)
 {
-	Result res = 0;
+	int res = 0;
 	char filename[256];
 	unsigned int bufsize = (64 * 1024);
 
@@ -83,9 +84,9 @@ Result unzExtractCurrentFile(unzFile *unzHandle, int *path)
 	return res;
 }
 
-Result unzExtractAll(const char *src, unzFile *unzHandle)
+int unzExtractAll(const char *src, unzFile *unzHandle)
 {
-	Result res = 0;
+	int res = 0;
 	int path = 0;
 	char *filename = Utils_Basename(src);
 	
@@ -118,7 +119,7 @@ Result unzExtractAll(const char *src, unzFile *unzHandle)
 	return res;
 }
 
-Result Archive_ExtractZip(const char *src, const char *dst)
+int Archive_ExtractZip(const char *src, const char *dst)
 {
 	char tmpFile2[512];
 	char tmpPath2[512];
@@ -137,7 +138,7 @@ Result Archive_ExtractZip(const char *src, const char *dst)
 	if (unzHandle == NULL) // not found
 		return -1;
 
-	Result res = unzExtractAll(src, unzHandle);
+	int res = unzExtractAll(src, unzHandle);
 	res = unzClose(unzHandle);
 
 	return res;

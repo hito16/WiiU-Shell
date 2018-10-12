@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <switch.h>
 
 #include "utils.h"
 
@@ -10,7 +9,7 @@ char *Utils_Basename(const char *filename)
 	return p ? p + 1 : (char *) filename;
 }
 
-void Utils_GetSizeString(char *string, u64 size)
+void Utils_GetSizeString(char *string, uint32_t size)
 {
 	double double_size = (double)size;
 
@@ -36,19 +35,6 @@ void Utils_SetMin(int *set, int value, int min)
 {
 	if (*set < min)
 		*set = value;
-}
-
-int Utils_Alphasort(const void *p1, const void *p2)
-{
-	FsDirectoryEntry* entryA = (FsDirectoryEntry*) p1;
-	FsDirectoryEntry* entryB = (FsDirectoryEntry*) p2;
-	
-	if ((entryA->type == ENTRYTYPE_DIR) && !(entryB->type == ENTRYTYPE_DIR))
-		return -1;
-	else if (!(entryA->type == ENTRYTYPE_DIR) && (entryB->type == ENTRYTYPE_DIR))
-		return 1;
-		
-	return strcasecmp(entryA->name, entryB->name);
 }
 
 void Utils_AppendArr(char subject[], const char insert[], int pos)
