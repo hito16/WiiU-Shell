@@ -30,3 +30,4 @@ make
 - **Preetisketch** for some of the assets used as well as the banner.
 - **StevenMattera** for the implementing the foundation of all touch-screen code.
 - **rock88** for integrating mupdf, allowing WiiU-Shell to read pdfs and other epubs.
+- **FlameKat53** for making the icon.png
