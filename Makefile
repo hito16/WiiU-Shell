@@ -1,6 +1,9 @@
 BASEDIR	:= $(dir $(firstword $(MAKEFILE_LIST)))
 VPATH	:= $(BASEDIR)
 
+PKGCONF			:=	$(DEVKITPRO)/portlibs/ppc/bin/powerpc-eabi-pkg-config
+PKGCONF_WIIU	:=	$(DEVKITPRO)/portlibs/wiiu/bin/powerpc-eabi-pkg-config
+
 #---------------------------------------------------------------------------------
 # TARGET is the name of the output
 # SOURCES is a list of directories containing source code
@@ -8,10 +11,16 @@ VPATH	:= $(BASEDIR)
 # ROMFS is a folder to generate app's romfs
 #---------------------------------------------------------------------------------
 TARGET		:=	WiiU-Shell
-SOURCES		:=	source source/audio source/menus source/minizip source/menus/menu_book_reader
-INCLUDES    :=	include include/audio include/menus include/minizip
+SOURCES		:=	source \
+				source/audio \
+				source/menus \
+				source/minizip \
+				source/menus/menu_book_reader
+INCLUDES    :=	include \
+				include/audio \
+				include/menus \
+				include/minizip
 ROMFS		:=	romfs
-include $(WUT_ROOT)/share/romfs-wiiu.mk
 
 VERSION_MAJOR := 1
 VERSION_MINOR := 0
@@ -20,40 +29,58 @@ VERSION_MICRO := 4
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-COMMFLAGS	:=	-O2 -Wall -Wno-format-truncation -U__STRICT_ANSI__ \
+CFLAGS		+=	-O2 -std=c11 -Wall -Wno-format-truncation -U__STRICT_ANSI__ \
 				-DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO)
-CFLAGS		+=	$(COMMFLAGS) -std=c11 
-CXXFLAGS	+=	$(COMMFLAGS)
-LDFLAGS		+=	$(WUT_NEWLIB_LDFLAGS) $(WUT_STDCPP_LDFLAGS) $(WUT_DEVOPTAB_LDFLAGS) $(ROMFS_LDFLAGS) \
-				-lcoreinit -lvpad -lsndcore2 -lsysapp -lproc_ui -lgx2 -lgfd -lzlib125 -lwhb \
-				-lg -lfreetype -lpng -ljpeg -lzip -lmad -lvorbisidec -logg \
-				-lSDL2_ttf -lSDL2_gfx -lSDL2_image -lSDL2 -lSDL2_mixer
+CXXFLAGS	+=	-O2 -Wall -Wno-format-truncation -U__STRICT_ANSI__ \
+				-DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) 
 
 #---------------------------------------------------------------------------------
-# get a list of objects
+# libraries
 #---------------------------------------------------------------------------------
-INCLUDE		:=	$(foreach dir,$(INCLUDES),-I$(dir))
+CFLAGS		+=	`$(PKGCONF_WIIU) --cflags SDL2_gfx SDL2_image SDL2_mixer SDL2_ttf sdl2`
+CXXFLAGS	+=	`$(PKGCONF_WIIU) --cflags SDL2_gfx SDL2_image SDL2_mixer SDL2_ttf sdl2`
+LDFLAGS		+=	`$(PKGCONF_WIIU) --libs SDL2_gfx SDL2_image SDL2_mixer SDL2_ttf sdl2` \
+				`$(PKGCONF) --libs freetype2 zlib libpng libjpeg libmpg123`
+
+#---------------------------------------------------------------------------------
+# wut libraries
+#---------------------------------------------------------------------------------
+LDFLAGS		+=	$(WUT_NEWLIB_LDFLAGS) $(WUT_STDCPP_LDFLAGS) \
+				-lcoreinit -lvpad -lsndcore2 -lnsysnet -lsysapp -lproc_ui -lgx2 -lgfd -lwhb
+
+#---------------------------------------------------------------------------------
+# romfs
+#---------------------------------------------------------------------------------
+include $(WUT_ROOT)/share/romfs-wiiu.mk
+LDFLAGS		+=	$(ROMFS_LDFLAGS)
+OBJECTS		+=	$(ROMFS_TARGET)
+
+#---------------------------------------------------------------------------------
+# includes
+#---------------------------------------------------------------------------------
+CFLAGS		+=	$(foreach dir,$(INCLUDES),-I$(dir))
+CXXFLAGS	+=	$(foreach dir,$(INCLUDES),-I$(dir))
+
+#---------------------------------------------------------------------------------
+# generate a list of objects
+#---------------------------------------------------------------------------------
 CFILES		:=	$(foreach dir,$(SOURCES),$(wildcard $(dir)/*.c))
 CPPFILES	:=	$(foreach dir,$(SOURCES),$(wildcard $(dir)/*.cpp))
-SFILES		:=	$(foreach dir,$(SOURCES),$(wildcard $(dir)/*.s))
-OBJECTS		:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o) $(ROMFS_TARGET)
-CFLAGS		+=	$(INCLUDE)
-CXXFLAGS	+=	$(INCLUDE)
+SFILES		:=	$(foreach dir,$(SOURCES),$(wildcard $(dir)/*.S))
+OBJECTS		+=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
 
 #---------------------------------------------------------------------------------
-# objectives
+# targets
 #---------------------------------------------------------------------------------
 $(TARGET).rpx: $(OBJECTS)
 
 clean:
-	@echo CLEAN ...
-	@rm -rf $(TARGET).rpx $(TARGET).rpx.elf $(OBJECTS) $(OBJECTS:.o=.d)
+	$(info clean ...)
+	@rm -rf $(TARGET).rpx $(OBJECTS) $(OBJECTS:.o=.d)
+
+.PHONY: clean
 
 #---------------------------------------------------------------------------------
-# wut and portlibs
+# wut
 #---------------------------------------------------------------------------------
 include $(WUT_ROOT)/share/wut.mk
-PORTLIBS	:=	$(DEVKITPRO)/portlibs/ppc
-LDFLAGS		+=	-L$(PORTLIBS)/lib
-CFLAGS		+=	-I$(PORTLIBS)/include -I$(PORTLIBS)/include/SDL2
-CXXFLAGS	+=	-I$(PORTLIBS)/include -I$(PORTLIBS)/include/SDL2
