@@ -29,9 +29,9 @@ VERSION_MICRO := 4
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-CFLAGS		+=	-O2 -std=c11 -Wall -Wno-format-truncation -U__STRICT_ANSI__ \
+CFLAGS		+=	-O2 -std=c11 -Wall -Wno-format-truncation -U__STRICT_ANSI__ -fcommon \
 				-DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO)
-CXXFLAGS	+=	-O2 -Wall -Wno-format-truncation -U__STRICT_ANSI__ \
+CXXFLAGS	+=	-O2 -Wall -Wno-format-truncation -U__STRICT_ANSI__ -fcommon \
 				-DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) 
 
 #---------------------------------------------------------------------------------
@@ -51,8 +51,9 @@ LDFLAGS		+=	$(WUT_NEWLIB_LDFLAGS) $(WUT_STDCPP_LDFLAGS) \
 #---------------------------------------------------------------------------------
 # romfs
 #---------------------------------------------------------------------------------
-include $(WUT_ROOT)/share/romfs-wiiu.mk
-LDFLAGS		+=	$(ROMFS_LDFLAGS)
+include $(DEVKITPRO)/portlibs/wiiu/share/romfs-wiiu.mk
+CFLAGS		+=	$(ROMFS_CFLAGS)
+LDFLAGS		+=	$(ROMFS_LIBS)
 OBJECTS		+=	$(ROMFS_TARGET)
 
 #---------------------------------------------------------------------------------
